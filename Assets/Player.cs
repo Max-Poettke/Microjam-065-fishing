@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 
 public class Player : MonoBehaviour
 {
+    [SerializeField] private float animationTime = 0.3f;
     private GridSpace currentGridSpace;
     private bool triedMovingThisFrame;
     public void Init(GridSpace startGridSpace)
@@ -38,6 +39,10 @@ public class Player : MonoBehaviour
 
     private void TryMove(GridSpace toMoveTo)
     {
+        if(toMoveTo == null)
+        {
+            return;
+        }
         if(toMoveTo.GetOccupier() != null)
         {
             //play error sound
@@ -45,9 +50,11 @@ public class Player : MonoBehaviour
         }
 
         currentGridSpace.SetOccupier(null);
-        //move
+        //move animation
+        GameMaster.instance.AddToCountDown(animationTime, GameMaster.GameState.PlayerAnimations);
 
         toMoveTo.SetOccupier(gameObject);
+        currentGridSpace = toMoveTo;
     }
 
     public GridSpace GetCurrentGridSpace()

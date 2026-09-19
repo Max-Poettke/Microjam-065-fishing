@@ -53,6 +53,16 @@ public class Grid : MonoBehaviour
                 gridSpace.SetVisualColor(senseColor, occupiedColor);
 
                 gridSpaces[i].Add(gridSpace);
+
+                if(i > 0)
+                {
+                    gridSpace.SetAboveSpace(gridSpaces[i - 1][j]);
+                }
+
+                if(j > 0)
+                {
+                    gridSpace.SetLeftSpace(gridSpaces[i][j - 1]);
+                }
             }
         }
 
@@ -82,7 +92,7 @@ public class Grid : MonoBehaviour
         {
             for(int j = (int)topLeftListPosition.y; j < topLeftListPosition.y + sideLength; j++)
             {
-                if(i < 0 || j < 0)
+                if(i < 0 || j < 0 || i >= tileAmountPerSide || j >= tileAmountPerSide)
                 {
                     continue;
                 }
@@ -159,9 +169,20 @@ public class GridSpace
         return aboveSpace;
     }
 
+    public void SetAboveSpace(GridSpace aboveSpace)
+    {
+        this.aboveSpace = aboveSpace;
+        aboveSpace.SetBelowSpace(this);
+    }
+
     public GridSpace GetBelowSpace()
     {
         return belowSpace;
+    }
+
+    public void SetBelowSpace(GridSpace belowSpace)
+    {
+        this.belowSpace = belowSpace;
     }
 
     public GridSpace GetLeftSpace()
@@ -169,9 +190,20 @@ public class GridSpace
         return leftSpace;
     }
 
+    public void SetLeftSpace(GridSpace leftSpace)
+    {
+        this.leftSpace = leftSpace;
+        leftSpace.SetRightSpace(this);
+    }
+
     public GridSpace GetRightSpace()
     {
         return rightSpace;
+    }
+
+    public void SetRightSpace(GridSpace rightSpace)
+    {
+        this.rightSpace = rightSpace;
     }
 
     public void SetVisualColor(Color color, Color occupiedColor)
