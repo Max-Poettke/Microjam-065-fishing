@@ -164,7 +164,7 @@ public class GridSpace
         return belowSpace;
     }
 
-    public GridSpace GetLefSpace()
+    public GridSpace GetLeftSpace()
     {
         return leftSpace;
     }

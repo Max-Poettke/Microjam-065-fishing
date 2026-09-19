@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class GameMaster : MonoBehaviour
 {
+    public static GameMaster instance;
     public enum GameState {
         Free,
         Animations,
@@ -11,6 +12,11 @@ public class GameMaster : MonoBehaviour
 
     private bool animationsFinished;
     private GameState gameState;
+
+    void Awake()
+    {
+        instance = this;
+    }
 
     void Start()
     {
@@ -25,5 +31,8 @@ public class GameMaster : MonoBehaviour
         }
     }
 
-    
+    public bool CanMove()
+    {
+        return gameState == GameState.Free;
+    }
 }
