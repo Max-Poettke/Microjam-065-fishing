@@ -1,10 +1,22 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameMaster : MonoBehaviour
 {
     public static GameMaster instance;
     public GameObject timerVisual;
+
+    [SerializeField] private RawImage blackScreen;
+    [SerializeField] private AudioClip winClip;
+    [SerializeField] private AudioClip lossClip;
+    [SerializeField] private AudioSource audioSource;
+
+    public int catchCondition = 1;
+    public int killCondition = 0;
+
     private Vector3 timerVisualStartSize;
     public enum GameState {
         Free,
@@ -34,6 +46,8 @@ public class GameMaster : MonoBehaviour
 
     void Start()
     {
+        blackScreen.color = Color.black;
+        blackScreen.DOFade(0, 2);
         timerVisualStartSize = timerVisual.transform.localScale;
         turnCounter = 0;
         activeFishes = Grid.instance.GetFishes();
@@ -66,7 +80,7 @@ public class GameMaster : MonoBehaviour
             {
             } else if (gameState == GameState.NPCAnimations && nextState == GameState.NPCAnimations)
             {
-                Debug.Log(activeFishes.Count + " " + fishesMoved);
+
                 activeFishes[fishesMoved].GetComponent<Fish>().TryMove();
                 fishesMoved ++;
 
@@ -97,6 +111,72 @@ public class GameMaster : MonoBehaviour
 
         countDown -= Time.deltaTime;
         timerVisual.transform.localScale = Vector3.Lerp(Vector3.zero, timerVisualStartSize, countDown / currentCountDownMax);
+    }
+
+    public void RemoveFish(Fish fish, bool killed = false)
+    {
+        if (activeFishes.Contains(fish.gameObject))
+        {
+            activeFishes.Remove(fish.gameObject);
+            if (killed)
+            {
+                if (fish.fishType.Equals(FishType.CFish) || fish.GetType().Equals(FishType.Shark))
+                {
+                    ReloadScene(true);
+                } else
+                {
+                    killCondition --;
+                }
+            } else
+            {
+                if (!fish.fishType.Equals(FishType.CFish))
+                {
+                    ReloadScene(true);
+                } else
+                {
+                    catchCondition --;
+                }
+            }
+
+            Destroy(fish.gameObject);
+
+            if(catchCondition == 0 && killCondition == 0)
+            {
+                Victory();
+            }
+        }
+    }
+
+    public void ReloadScene(bool failed)
+    {
+        gameState = GameState.Stop;
+        nextState = GameState.Stop;
+        countDown = 0f;
+
+        if (failed)
+        {
+            audioSource.clip = lossClip;
+            audioSource.Play();
+        }
+        blackScreen.DOFade(1, 2).OnComplete(() =>
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        });        
+    }
+
+    public void Victory()
+    {
+        audioSource.clip = winClip;
+        audioSource.Play();
+
+        gameState = GameState.Stop;
+        nextState = GameState.Stop;
+        countDown = 0f;
+
+        blackScreen.DOFade(1, 2).OnComplete(() =>
+        {
+            
+        }); 
     }
 
     public void AddToCountDown(float time, GameState nextState)

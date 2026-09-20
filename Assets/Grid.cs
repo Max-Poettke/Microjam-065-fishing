@@ -125,6 +125,11 @@ public class Grid : MonoBehaviour
         return player.GetCurrentGridSpace().GetListPosition() - fromSpace.GetListPosition();
     }
 
+    public GridSpace GetPlayerPreviousGrid()
+    {
+        return player.GetPreviousGridSpace();
+    }
+
     public void DisplaySenseGrid(GridSpace centerSpace, int distance)
     {
         audioSource.Stop();
@@ -172,6 +177,7 @@ public class Grid : MonoBehaviour
 
 public class GridSpace
 {
+    private Trap trap;
     Vector3 position;
     Vector2 listPosition;
     GameObject occupier;
@@ -196,7 +202,22 @@ public class GridSpace
 
     public void SetOccupier(GameObject occupier)
     {
-        this.occupier = occupier; 
+        this.occupier = occupier;
+        
+        if(occupier == null) return;
+        if(trap == null) return;
+        if (occupier.GetComponent<Fish>() == null) return;
+        trap.Catch(occupier.GetComponent<Fish>());
+    }
+
+    public Trap GetTrap()
+    {
+        return trap;
+    }
+
+    public void SetTrap(Trap trap)
+    {
+        this.trap = trap;
     }
 
     public Vector2 GetListPosition()

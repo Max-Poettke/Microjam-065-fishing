@@ -9,19 +9,27 @@ public class Player : MonoBehaviour
     [SerializeField] private float idleAnimationLoop = 3f;
     [SerializeField] private Transform shakeTransform;
     [SerializeField] private Transform squishTransform;
+
+    [SerializeField] private GameObject cageTrap;
+    [SerializeField] private GameObject explosionTrap;
+
     private GridSpace currentGridSpace;
     private GridSpace previousGridSpace;
+
+    private Vector3 orignalSize;
 
     public void Init(GridSpace startGridSpace)
     {
         currentGridSpace = startGridSpace;
         currentGridSpace.SetOccupier(gameObject);
+        previousGridSpace = startGridSpace;
         transform.position = currentGridSpace.GetPosition();
         
+        orignalSize = transform.localScale;
         Vector3 scaleToReach = transform.localScale;
-        transform.localScale = Vector3.zero;
+        squishTransform.localScale = Vector3.zero;
 
-        transform.DOScale(scaleToReach, 0.6f).OnComplete(() => {StartIdleAnim();});
+        squishTransform.DOScale(scaleToReach, 0.6f).OnComplete(() => {StartIdleAnim();});
     }
 
     void Update()
@@ -38,13 +46,28 @@ public class Player : MonoBehaviour
 
     private void StartIdleAnim()
     {
-        Debug.Log("Started anim");
+        transform.localScale = orignalSize;
         transform.DOPunchScale(Vector3.one * 0.05f, idleAnimationLoop, 1, 0.3f).OnComplete(() => {StartIdleAnim();});
     }
 
     private void GetInput()
     {
         if (!GameMaster.instance.CanMove()) return;
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            GameMaster.instance.ReloadScene(false);
+        }
+
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            PlaceTrap(false);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            PlaceTrap(true);
+        }
         
         if(Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
         {
@@ -61,6 +84,23 @@ public class Player : MonoBehaviour
         }
     }
 
+    private void PlaceTrap(bool kill)
+    {
+        if(currentGridSpace.GetTrap() != null) return;
+        
+        if (kill)
+        {
+            GameObject trap = Instantiate(explosionTrap);
+            currentGridSpace.SetTrap(trap.GetComponent<Trap>());
+            trap.transform.position = currentGridSpace.GetPosition();
+        } else
+        {
+            GameObject trap = Instantiate(cageTrap);
+            currentGridSpace.SetTrap(trap.GetComponent<Trap>());
+            trap.transform.position = currentGridSpace.GetPosition();
+        }
+    }
+
     private void TryMove(GridSpace toMoveTo)
     {
         if(toMoveTo == null)
@@ -72,13 +112,19 @@ public class Player : MonoBehaviour
         }
         if(toMoveTo.GetOccupier() != null)
         {
-            //play error sound
-            squishTransform.DOPunchScale(Vector3.one * 0.2f, animationTime / 2f);
-            GameMaster.instance.SetState(GameMaster.GameState.PlayerAnimations);
-            GameMaster.instance.AddToCountDown(animationTime / 2f, GameMaster.GameState.Free);
-            return;
+            if(toMoveTo.GetTrap() == null)
+            {
+                //play error sound
+                squishTransform.DOPunchScale(Vector3.one * 0.2f, animationTime / 2f);
+                GameMaster.instance.SetState(GameMaster.GameState.PlayerAnimations);
+                GameMaster.instance.AddToCountDown(animationTime / 2f, GameMaster.GameState.Free);
+                return;   
+            }
+
+            toMoveTo.GetTrap().EmptyOut(false);
         }
 
+        previousGridSpace = currentGridSpace;
         currentGridSpace.SetOccupier(null);
         //move animation
         
@@ -97,5 +143,10 @@ public class Player : MonoBehaviour
     public GridSpace GetCurrentGridSpace()
     {
         return currentGridSpace;
+    }
+
+    public GridSpace GetPreviousGridSpace()
+    {
+        return previousGridSpace;
     }
 }
