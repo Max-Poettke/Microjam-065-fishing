@@ -10,12 +10,12 @@ public class Grid : MonoBehaviour
     [SerializeField] private Player player;
 
     [Header("Fishes")]
-    [SerializeField] List<GameObject> fishes;
-    [SerializeField] List<Vector2> fishPositions;
+    [SerializeField] private List<GameObject> fishes;
+    [SerializeField] private List<Vector2> fishPositions;
 
     [Header("Islands")]
-    [SerializeField] GameObject islandPrefab;
-    [SerializeField] List<Vector2> islandPositions;
+    [SerializeField] private GameObject islandPrefab;
+    [SerializeField] private List<Vector2> islandPositions;
 
     [Header("Audio")]
     [SerializeField] private AudioSource audioSource;
@@ -103,8 +103,9 @@ public class Grid : MonoBehaviour
             fishes[i].transform.position = gridSpaces[(int)fishPositions[i].x][(int)fishPositions[i].y].GetPosition();
             Vector3 originalScale = fishes[i].transform.localScale;
             fishes[i].transform.localScale = Vector3.zero;
-            fishes[i].transform.DOScale(originalScale, 0.6f);
+            fishes[i].transform.DOScale(originalScale, 0.6f).OnComplete(() => {fishes[i].GetComponent<Fish>().StartIdleAnim();});
             gridSpaces[(int)fishPositions[i].x][(int)fishPositions[i].y].SetOccupier(fishes[i]);
+            fishes[i].GetComponent<Fish>().SetCurrentGridSpace(gridSpaces[(int)fishPositions[i].x][(int)fishPositions[i].y]);
         }
     }
 
@@ -117,6 +118,11 @@ public class Grid : MonoBehaviour
         {
             CloseSenseGrid();
         }
+    }
+
+    public Vector2 GetPlayerDistanceVector(GridSpace fromSpace)
+    {
+        return player.GetCurrentGridSpace().GetListPosition() - fromSpace.GetListPosition();
     }
 
     public void DisplaySenseGrid(GridSpace centerSpace, int distance)
@@ -156,6 +162,11 @@ public class Grid : MonoBehaviour
             }
         }
         displaying = false;
+    }
+
+    public List<GameObject> GetFishes()
+    {
+        return fishes;
     }
 }
 

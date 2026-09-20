@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GameMaster : MonoBehaviour
@@ -13,14 +14,17 @@ public class GameMaster : MonoBehaviour
         Stop
     }
     private GameState gameState;
+    private GameState nextState;
 
     [SerializeField] private float startingCountDown = 0.3f;
-    private bool starting = true;
     private bool spawnedWorld = false;
     private bool spawnedPlayer = false;
 
     private float countDown = 0f;
     private float currentCountDownMax = 0f;
+
+    private List<GameObject> activeFishes;
+    private int fishesMoved = 0;
     private int turnCounter = 0;
 
     void Awake()
@@ -32,12 +36,14 @@ public class GameMaster : MonoBehaviour
     {
         timerVisualStartSize = timerVisual.transform.localScale;
         turnCounter = 0;
-        AddToCountDown(startingCountDown, GameState.Start);
+        activeFishes = Grid.instance.GetFishes();
+        gameState = GameState.Start;
+        AddToCountDown(startingCountDown, GameState.Free);
     }
 
     void Update()
     {
-        if(starting)
+        if(gameState == GameState.Start)
         {
             if (!spawnedWorld)
             {
@@ -58,19 +64,33 @@ public class GameMaster : MonoBehaviour
         {
             if(gameState == GameState.PlayerAnimations)
             {
-                //switch to NPC animations and give them time to do something
-            } else if (gameState == GameState.NPCAnimations)
+            } else if (gameState == GameState.NPCAnimations && nextState == GameState.NPCAnimations)
             {
-                //check if there is another NPC that still has to do an animation
-                
-                //else leave countdown to finish
+                Debug.Log(activeFishes.Count + " " + fishesMoved);
+                activeFishes[fishesMoved].GetComponent<Fish>().TryMove();
+                fishesMoved ++;
+
+                if(fishesMoved < activeFishes.Count)
+                {
+                    AddToCountDown(0.14f, GameState.NPCAnimations);     
+                } else
+                {
+                    AddToCountDown(0.14f, GameState.Free);
+                }
+
+            } else if (gameState == GameState.NPCAnimations && nextState == GameState.Free)
+            {
+                turnCounter ++;
             }
         }
 
         if(countDown <= 0f)
         {
-            starting = false;
-            gameState = GameState.Free;
+            if(nextState == GameState.NPCAnimations)
+            {
+                fishesMoved = 0;
+            }
+            gameState = nextState;
             countDown = 0f;
             return;
         }
@@ -79,12 +99,17 @@ public class GameMaster : MonoBehaviour
         timerVisual.transform.localScale = Vector3.Lerp(Vector3.zero, timerVisualStartSize, countDown / currentCountDownMax);
     }
 
-    public void AddToCountDown(float time, GameState gameState)
+    public void AddToCountDown(float time, GameState nextState)
     {
-        this.gameState = gameState;
+        this.nextState = nextState;
         countDown += time;
         currentCountDownMax = countDown;
         timerVisual.transform.localScale = timerVisualStartSize;
+    }
+
+    public void SetState(GameState state)
+    {
+        gameState = state;
     }
 
     public bool CanMove()

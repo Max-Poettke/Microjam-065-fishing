@@ -520,13 +520,13 @@ MonoBehaviour:
   playerStartingTile: {x: 4, y: 2}
   player: {fileID: 911289221}
   fishes:
-  - {fileID: 919132147795263719}
-  - {fileID: 919132148377401956}
-  - {fileID: 919132149008099561}
+  - {fileID: 1205380337}
+  - {fileID: 1637430284}
+  - {fileID: 960354927}
   fishPositions:
   - {x: 0, y: 1}
   - {x: 0, y: 4}
-  - {x: 2, y: 0}
+  - {x: 2, y: 2}
   islandPrefab: {fileID: 919132149155446097, guid: 02af4afea3381c54da4f35dc66ce513e, type: 3}
   islandPositions:
   - {x: 0, y: 2}
@@ -1058,6 +1058,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1d356debfb2bf846874cc657c44f2bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  fishType: 2
   meshTransform: {fileID: 543450652680172115}
   moveClip: {fileID: 0}
   audioSource: {fileID: 1895038423}
@@ -1251,6 +1252,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1d356debfb2bf846874cc657c44f2bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  fishType: 0
   meshTransform: {fileID: 543450651712739933}
   moveClip: {fileID: 0}
   audioSource: {fileID: 778574743}
@@ -1581,6 +1583,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1d356debfb2bf846874cc657c44f2bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  fishType: 1
   meshTransform: {fileID: 543450652364071134}
   moveClip: {fileID: 0}
   audioSource: {fileID: 1667558371}

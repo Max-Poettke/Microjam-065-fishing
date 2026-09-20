@@ -1,30 +1,224 @@
 using UnityEngine;
 using DG.Tweening;
 
+public enum FishType
+{
+    CFish,
+    LFish,
+    Shark
+}
+
+
 public class Fish : MonoBehaviour
 {
-
-    public enum FishType
-    {
-        CFish,
-        LFish,
-        Shark
-    }
+    public FishType fishType = FishType.CFish;
 
     [SerializeField] private Transform meshTransform; //used for bounciness in animation
     [SerializeField] private AudioClip moveClip;
     [SerializeField] private AudioSource audioSource;
 
+    private GridSpace currentGridSpace;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+
+    public void TryMove()
     {
+        GridSpace toMoveTo = GetMoveToSpace();
+        if(toMoveTo == currentGridSpace) return;
+        currentGridSpace.SetOccupier(null);
         
+        //move animation
+        Vector3 targetPosition = toMoveTo.GetPosition();
+        meshTransform.DOPunchScale(Vector3.one * 0.8f, 0.1f);
+        transform.DOLookAt(targetPosition, 0.1f);
+        transform.DOMove(targetPosition, 0.1f);
+
+        toMoveTo.SetOccupier(gameObject);
+        currentGridSpace = toMoveTo;
     }
 
-    // Update is called once per frame
-    void Update()
+    private GridSpace GetMoveToSpace()
     {
+        switch (fishType)
+        {
+            case FishType.CFish:
+                return GetMoveAwaySpace();
+            case FishType.LFish:
+                return GetMoveAwaySpace();
+            case FishType.Shark:
+                break;
+        }
+        return currentGridSpace;
+    }
+
+    private GridSpace GetMoveAwaySpace()
+    {
+        Vector2 distanceToPlayer = Grid.instance.GetPlayerDistanceVector(currentGridSpace);
+        if(Mathf.Abs(distanceToPlayer.x) > GetSmellDistance() || Mathf.Abs(distanceToPlayer.y) > GetSmellDistance()) return currentGridSpace;
         
+        bool below = false;
+        bool above = false;
+        bool right = false;
+        bool left = false;
+        
+        if(distanceToPlayer.x > 0) below = true;
+        if(distanceToPlayer.x < 0) above = true;
+        if(distanceToPlayer.y > 0) right = true;
+        if(distanceToPlayer.y < 0) left = true;
+
+
+        //paradoxically, x relates to i here so is the vertical movement
+        if(distanceToPlayer.x > 0)
+        {
+            //player is below -> try to go up
+            if(currentGridSpace.GetAboveSpace() != null && !above)
+            {
+                if(currentGridSpace.GetAboveSpace().GetOccupier() == null)
+                {
+                    return currentGridSpace.GetAboveSpace();    
+                }
+            } 
+            
+            if(currentGridSpace.GetLeftSpace() != null && !left)
+            {
+                if (currentGridSpace.GetLeftSpace().GetOccupier() == null)
+                {
+                    return currentGridSpace.GetLeftSpace();
+                }    
+            }
+             
+            if(currentGridSpace.GetRightSpace() != null && !right)
+            {
+                if(currentGridSpace.GetRightSpace().GetOccupier() == null)
+                {
+                    return currentGridSpace.GetRightSpace();
+                }    
+            }
+            return currentGridSpace;
+
+        } else if (distanceToPlayer.x < 0)
+        {
+            // player is above -> try to go down
+            
+            if(currentGridSpace.GetBelowSpace() != null && !below)
+            {
+                if(currentGridSpace.GetBelowSpace().GetOccupier() == null)
+                {
+                    return currentGridSpace.GetBelowSpace();   
+                }
+            }
+             
+            if(currentGridSpace.GetLeftSpace() != null && !left)
+            {
+                if (currentGridSpace.GetLeftSpace().GetOccupier() == null)
+                {
+                    return currentGridSpace.GetLeftSpace();
+                }    
+            }
+            
+            if(currentGridSpace.GetRightSpace() != null && !right)
+            {
+                if(currentGridSpace.GetRightSpace().GetOccupier() == null)
+                {
+                    return currentGridSpace.GetRightSpace();
+                }    
+            }
+
+            return currentGridSpace;
+        } else if (distanceToPlayer.y > 0)
+        {
+            //player is to the right -> try move left
+            if(currentGridSpace.GetLeftSpace() != null && !left)
+            {
+                if (currentGridSpace.GetLeftSpace().GetOccupier() == null)
+                {
+                    return currentGridSpace.GetLeftSpace();
+                }
+            }
+            
+            if(currentGridSpace.GetAboveSpace()!= null && !above)
+            {
+                if(currentGridSpace.GetAboveSpace().GetOccupier() == null)
+                {
+                    return currentGridSpace.GetAboveSpace();   
+                }    
+            }
+            
+            if(currentGridSpace.GetBelowSpace() != null && !below)
+            {
+                if(currentGridSpace.GetBelowSpace().GetOccupier() == null)
+                {
+                    return currentGridSpace.GetBelowSpace();   
+                }    
+            }
+
+            return currentGridSpace;
+        } else if (distanceToPlayer.y < 0)
+        {
+            //player is to the left -> try move right
+            if(currentGridSpace.GetRightSpace() != null && !right)
+            {
+                if (currentGridSpace.GetRightSpace().GetOccupier() == null)
+                {
+                    return currentGridSpace.GetRightSpace();
+                }    
+            }
+            
+            if(currentGridSpace.GetAboveSpace() != null && !above)
+            {
+                if(currentGridSpace.GetAboveSpace().GetOccupier() == null)
+                {
+                    return currentGridSpace.GetAboveSpace();   
+                }    
+            }
+             
+            if(currentGridSpace.GetBelowSpace() != null && !below)
+            {
+                if(currentGridSpace.GetBelowSpace().GetOccupier() == null)
+                {
+                    return currentGridSpace.GetBelowSpace();   
+                }    
+            } 
+             
+            return currentGridSpace;
+        }
+
+        return currentGridSpace;
+    }
+
+    private GridSpace GetMoveTowardsSpace()
+    {
+        Vector2 distanceToPlayer = Grid.instance.GetPlayerDistanceVector(currentGridSpace);
+        return null;
+    }
+
+    public int GetSmellDistance()
+    {
+        switch (fishType)
+        {
+            case FishType.CFish:
+                return 2;
+            case FishType.LFish:
+                return 1;
+            case FishType.Shark:
+                return 2;
+            default:
+                return 0;
+        }
+    }
+
+    public void StartIdleAnim()
+    {
+        Debug.Log("Started anim");
+        transform.DOPunchScale(Vector3.one * 0.05f, 1, 1, 0.3f).OnComplete(() => {StartIdleAnim();});
+    }
+
+    public GridSpace GetCurrentGridSpace()
+    {
+        return currentGridSpace;
+    }
+
+    public void SetCurrentGridSpace(GridSpace gridSpace)
+    {
+        this.currentGridSpace = gridSpace;
     }
 }

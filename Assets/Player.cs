@@ -8,6 +8,7 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform shakeTransform;
     [SerializeField] private Transform squishTransform;
     private GridSpace currentGridSpace;
+    private GridSpace previousGridSpace;
 
     public void Init(GridSpace startGridSpace)
     {
@@ -56,14 +57,16 @@ public class Player : MonoBehaviour
         if(toMoveTo == null)
         {
             squishTransform.DOPunchScale(Vector3.one * 0.2f, animationTime / 2f);
-            GameMaster.instance.AddToCountDown(animationTime / 2f, GameMaster.GameState.PlayerAnimations);
+            GameMaster.instance.SetState(GameMaster.GameState.PlayerAnimations);
+            GameMaster.instance.AddToCountDown(animationTime / 2f, GameMaster.GameState.Free);
             return;
         }
         if(toMoveTo.GetOccupier() != null)
         {
             //play error sound
             squishTransform.DOPunchScale(Vector3.one * 0.2f, animationTime / 2f);
-            GameMaster.instance.AddToCountDown(animationTime / 2f, GameMaster.GameState.PlayerAnimations);
+            GameMaster.instance.SetState(GameMaster.GameState.PlayerAnimations);
+            GameMaster.instance.AddToCountDown(animationTime / 2f, GameMaster.GameState.Free);
             return;
         }
 
@@ -74,7 +77,8 @@ public class Player : MonoBehaviour
         squishTransform.DOPunchScale(Vector3.one * 0.2f, animationTime);
         transform.DOLookAt(targetPosition, animationTime);
         transform.DOMove(targetPosition, animationTime);
-        GameMaster.instance.AddToCountDown(animationTime, GameMaster.GameState.PlayerAnimations);
+        GameMaster.instance.SetState(GameMaster.GameState.PlayerAnimations);
+        GameMaster.instance.AddToCountDown(animationTime, GameMaster.GameState.NPCAnimations);
 
         toMoveTo.SetOccupier(gameObject);
         currentGridSpace = toMoveTo;
