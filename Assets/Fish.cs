@@ -16,6 +16,7 @@ public class Fish : MonoBehaviour
     [SerializeField] private Transform meshTransform; //used for bounciness in animation
     [SerializeField] private AudioClip moveClip;
     [SerializeField] private AudioSource audioSource;
+    [SerializeField] private ParticleSystem movementParticles;
 
     private GridSpace currentGridSpace;
 
@@ -31,6 +32,12 @@ public class Fish : MonoBehaviour
         meshTransform.DOPunchScale(Vector3.one * 0.8f, 0.1f);
         transform.DOLookAt(targetPosition, 0.1f);
         transform.DOMove(targetPosition, 0.1f);
+
+        audioSource.clip = moveClip;
+        audioSource.pitch = Random.Range(0.99f, 1.1f);
+        audioSource.Play();
+
+        movementParticles.Play();
 
         toMoveTo.SetOccupier(gameObject);
         currentGridSpace = toMoveTo;

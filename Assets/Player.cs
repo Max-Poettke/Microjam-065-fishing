@@ -3,6 +3,8 @@ using DG.Tweening;
 
 public class Player : MonoBehaviour
 {
+    [SerializeField] private AudioClip movementAudio;
+    [SerializeField] private AudioSource audioSource;
     [SerializeField] private float animationTime = 0.3f;
     [SerializeField] private float idleAnimationLoop = 3f;
     [SerializeField] private Transform shakeTransform;
@@ -25,6 +27,13 @@ public class Player : MonoBehaviour
     void Update()
     {
         GetInput();
+    }
+
+    private void PlayMoveSoundPitchRandomized()
+    {
+        audioSource.clip = movementAudio;
+        audioSource.pitch = Random.Range(0.99f, 1.1f);
+        audioSource.Play();
     }
 
     private void StartIdleAnim()
@@ -80,6 +89,7 @@ public class Player : MonoBehaviour
         GameMaster.instance.SetState(GameMaster.GameState.PlayerAnimations);
         GameMaster.instance.AddToCountDown(animationTime, GameMaster.GameState.NPCAnimations);
 
+        PlayMoveSoundPitchRandomized();
         toMoveTo.SetOccupier(gameObject);
         currentGridSpace = toMoveTo;
     }
