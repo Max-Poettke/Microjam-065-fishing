@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using DG.Tweening;
 
 
 public class Grid : MonoBehaviour
@@ -7,6 +8,14 @@ public class Grid : MonoBehaviour
     [Header("PlayerRef")]
     [SerializeField] private Vector2 playerStartingTile;
     [SerializeField] private Player player;
+
+    [Header("Fishes")]
+    [SerializeField] List<GameObject> fishes;
+    [SerializeField] List<Vector2> fishPositions;
+
+    [Header("Islands")]
+    [SerializeField] GameObject islandPrefab;
+    [SerializeField] List<Vector2> islandPositions;
 
     [Header("Audio")]
     [SerializeField] private AudioSource audioSource;
@@ -65,15 +74,45 @@ public class Grid : MonoBehaviour
                 }
             }
         }
+    }
 
+    public void InitPlayer()
+    {
         player.Init(gridSpaces[(int)playerStartingTile.x][(int)playerStartingTile.y]);
+    }
+
+    public void SetIslandAndFishPositions()
+    {
+        //IslandPositions
+        for(int i = 0; i < islandPositions.Count; i++)
+        {
+            GameObject newIsland = Instantiate(islandPrefab);
+            Vector3 originalScale = newIsland.transform.localScale;
+            newIsland.transform.position = gridSpaces[(int)islandPositions[i].x][(int)islandPositions[i].y].GetPosition();
+            newIsland.transform.localScale = Vector3.zero;
+            float randomRotation = Random.Range(0f,1f) * 360;
+            newIsland.transform.DORotate(new Vector3(0,randomRotation,0), 0.6f);
+            newIsland.transform.DOScale(originalScale, 0.6f);
+            gridSpaces[(int)islandPositions[i].x][(int)islandPositions[i].y].SetOccupier(newIsland);
+            
+        }
+
+        //Fishies and their positions
+        for(int i = 0; i < fishPositions.Count; i++)
+        {
+            fishes[i].transform.position = gridSpaces[(int)fishPositions[i].x][(int)fishPositions[i].y].GetPosition();
+            Vector3 originalScale = fishes[i].transform.localScale;
+            fishes[i].transform.localScale = Vector3.zero;
+            fishes[i].transform.DOScale(originalScale, 0.6f);
+            gridSpaces[(int)fishPositions[i].x][(int)fishPositions[i].y].SetOccupier(fishes[i]);
+        }
     }
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space) && !displaying)
         {
-            DisplaySenseGrid(player.GetCurrentGridSpace(), 1);
+            DisplaySenseGrid(player.GetCurrentGridSpace(), 2);
         } else if (Input.GetKeyDown(KeyCode.Space))
         {
             CloseSenseGrid();

@@ -15,6 +15,10 @@ public class GameMaster : MonoBehaviour
     private GameState gameState;
 
     [SerializeField] private float startingCountDown = 0.3f;
+    private bool starting = true;
+    private bool spawnedWorld = false;
+    private bool spawnedPlayer = false;
+
     private float countDown = 0f;
     private float currentCountDownMax = 0f;
     private int turnCounter = 0;
@@ -33,6 +37,23 @@ public class GameMaster : MonoBehaviour
 
     void Update()
     {
+        if(starting)
+        {
+            if (!spawnedWorld)
+            {
+                spawnedWorld = true;
+                Grid.instance.SetIslandAndFishPositions();
+            }
+
+            if (!spawnedPlayer)
+            {
+                if(countDown < startingCountDown / 2f)
+                {
+                    Grid.instance.InitPlayer();
+                }    
+            }
+        }
+
         if(countDown <= 0.1f)
         {
             if(gameState == GameState.PlayerAnimations)
@@ -48,6 +69,7 @@ public class GameMaster : MonoBehaviour
 
         if(countDown <= 0f)
         {
+            starting = false;
             gameState = GameState.Free;
             countDown = 0f;
             return;
