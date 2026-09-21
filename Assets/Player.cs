@@ -3,6 +3,7 @@ using DG.Tweening;
 
 public class Player : MonoBehaviour
 {
+    
     [SerializeField] private AudioClip movementAudio;
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private float animationTime = 0.3f;
@@ -10,8 +11,13 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform shakeTransform;
     [SerializeField] private Transform squishTransform;
 
+
+
     [SerializeField] private GameObject cageTrap;
+    [SerializeField] private int cageTrapAmount;
     [SerializeField] private GameObject explosionTrap;
+    [SerializeField] private int explosionTrapAmount;
+
 
     private GridSpace currentGridSpace;
     private GridSpace previousGridSpace;
@@ -29,7 +35,7 @@ public class Player : MonoBehaviour
         Vector3 scaleToReach = transform.localScale;
         squishTransform.localScale = Vector3.zero;
 
-        squishTransform.DOScale(scaleToReach, 0.6f).OnComplete(() => {StartIdleAnim();});
+        squishTransform.DOScale(scaleToReach, 0.6f);
     }
 
     void Update()
@@ -90,14 +96,18 @@ public class Player : MonoBehaviour
         
         if (kill)
         {
+            if(explosionTrapAmount <= 0) return;
             GameObject trap = Instantiate(explosionTrap);
             currentGridSpace.SetTrap(trap.GetComponent<Trap>());
             trap.transform.position = currentGridSpace.GetPosition();
+            explosionTrapAmount --;
         } else
         {
+            if(cageTrapAmount <= 0) return;
             GameObject trap = Instantiate(cageTrap);
             currentGridSpace.SetTrap(trap.GetComponent<Trap>());
             trap.transform.position = currentGridSpace.GetPosition();
+            cageTrapAmount --;
         }
     }
 
@@ -106,8 +116,8 @@ public class Player : MonoBehaviour
         if(toMoveTo == null)
         {
             squishTransform.DOPunchScale(Vector3.one * 0.2f, animationTime / 2f);
-            GameMaster.instance.SetState(GameMaster.GameState.PlayerAnimations);
-            GameMaster.instance.AddToCountDown(animationTime / 2f, GameMaster.GameState.Free);
+            GameMaster.instance.SetState(GameState.PlayerAnimations);
+            GameMaster.instance.AddToCountDown(animationTime / 2f, GameState.Free);
             return;
         }
         if(toMoveTo.GetOccupier() != null)
@@ -116,8 +126,8 @@ public class Player : MonoBehaviour
             {
                 //play error sound
                 squishTransform.DOPunchScale(Vector3.one * 0.2f, animationTime / 2f);
-                GameMaster.instance.SetState(GameMaster.GameState.PlayerAnimations);
-                GameMaster.instance.AddToCountDown(animationTime / 2f, GameMaster.GameState.Free);
+                GameMaster.instance.SetState(GameState.PlayerAnimations);
+                GameMaster.instance.AddToCountDown(animationTime / 2f, GameState.Free);
                 return;   
             }
 
@@ -132,8 +142,8 @@ public class Player : MonoBehaviour
         squishTransform.DOPunchScale(Vector3.one * 0.2f, animationTime);
         transform.DOLookAt(targetPosition, animationTime);
         transform.DOMove(targetPosition, animationTime);
-        GameMaster.instance.SetState(GameMaster.GameState.PlayerAnimations);
-        GameMaster.instance.AddToCountDown(animationTime, GameMaster.GameState.NPCAnimations);
+        GameMaster.instance.SetState(GameState.PlayerAnimations);
+        GameMaster.instance.AddToCountDown(animationTime, GameState.NPCAnimations);
 
         PlayMoveSoundPitchRandomized();
         toMoveTo.SetOccupier(gameObject);

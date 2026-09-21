@@ -35,6 +35,7 @@ public class Fish : MonoBehaviour
         if(toMoveTo == currentGridSpace) return;
         currentGridSpace.SetOccupier(null);
         
+        GameMaster.instance.AddToCountDown(0.12f, GameState.NPCAnimations);
         //move animation
         Vector3 targetPosition = toMoveTo.GetPosition();
         meshTransform.DOPunchScale(Vector3.one * 0.8f, 0.1f);
@@ -68,6 +69,39 @@ public class Fish : MonoBehaviour
     private GridSpace GetMoveAwaySpace()
     {
         Vector2 distanceToPlayer = Grid.instance.GetPlayerDistanceVector(currentGridSpace);
+        
+        if(fishType == FishType.LFish)
+        {
+            GridSpace aboveSpace = currentGridSpace.GetAboveSpace();
+            GridSpace belowSpace = currentGridSpace.GetBelowSpace();
+            GridSpace leftSpace = currentGridSpace.GetLeftSpace();
+            GridSpace rightSpace = currentGridSpace.GetRightSpace();
+            
+            Fish fishToEat = null;
+            if(aboveSpace != null && fishToEat == null)
+            {
+                fishToEat = CheckSpaceForFish(aboveSpace);
+            }
+            if(belowSpace != null && fishToEat == null)
+            {
+                fishToEat = CheckSpaceForFish(belowSpace);
+            }
+            if(leftSpace != null && fishToEat == null)
+            {
+                fishToEat = CheckSpaceForFish(leftSpace);
+            }
+            if(rightSpace != null && fishToEat == null)
+            {
+                fishToEat = CheckSpaceForFish(rightSpace);
+            }
+
+            if(fishToEat != null) {
+                EatFish(fishToEat);
+                return currentGridSpace;
+            }
+        }
+        
+        
         if(Mathf.Abs(distanceToPlayer.x) > GetSmellDistance() || Mathf.Abs(distanceToPlayer.y) > GetSmellDistance()) return currentGridSpace;
         
         bool below = false;
@@ -79,6 +113,12 @@ public class Fish : MonoBehaviour
         if(distanceToPlayer.x < 0) above = true;
         if(distanceToPlayer.y > 0) right = true;
         if(distanceToPlayer.y < 0) left = true;
+
+        
+
+        
+
+        
 
 
         //paradoxically, x relates to i here so is the vertical movement
@@ -202,7 +242,69 @@ public class Fish : MonoBehaviour
 
     private GridSpace GetMoveTowardsSpace()
     {
-        Vector2 distanceToPlayer = Grid.instance.GetPlayerDistanceVector(currentGridSpace);
+        Vector2 distanceToPlayer = Grid.instance.GetPlayerPreviousGrid().GetListPosition() - currentGridSpace.GetListPosition();
+
+        //Shark eats other fishes first -> should trigger fail condition
+
+        GridSpace aboveSpace = currentGridSpace.GetAboveSpace();
+        GridSpace belowSpace = currentGridSpace.GetBelowSpace();
+        GridSpace leftSpace = currentGridSpace.GetLeftSpace();
+        GridSpace rightSpace = currentGridSpace.GetRightSpace();
+
+        Fish fishToEat = null;
+        Player player = null;
+
+        if(aboveSpace != null && player == null)
+        {
+            player = CheckSpaceForPlayer(aboveSpace);
+        }
+        if(belowSpace != null && player == null)
+        {
+            player = CheckSpaceForPlayer(belowSpace);
+        }
+        if(leftSpace != null && player == null)
+        {
+            player = CheckSpaceForPlayer(leftSpace);
+        }
+        if(rightSpace != null && player == null)
+        {
+            player = CheckSpaceForPlayer(rightSpace);
+        }
+
+
+
+        if(aboveSpace != null && fishToEat == null)
+        {
+            fishToEat = CheckSpaceForFish(aboveSpace);
+        }
+        if(belowSpace != null && fishToEat == null)
+        {
+            fishToEat = CheckSpaceForFish(belowSpace);
+        }
+        if(leftSpace != null && fishToEat == null)
+        {
+            fishToEat = CheckSpaceForFish(leftSpace);
+        }
+        if(rightSpace != null && fishToEat == null)
+        {
+            fishToEat = CheckSpaceForFish(rightSpace);
+        }
+
+        bool eaten = false;
+
+        if(fishToEat != null) 
+        {
+            EatFish(fishToEat);
+            eaten = true;
+        }
+        if(player != null)
+        {
+            EatPlayer(player);
+            eaten = true;    
+        } 
+        if(eaten) return currentGridSpace;
+        
+
         if(Mathf.Abs(distanceToPlayer.x) > GetSmellDistance() || Mathf.Abs(distanceToPlayer.y) > GetSmellDistance()) return currentGridSpace;
         
         bool below = false;
@@ -210,51 +312,126 @@ public class Fish : MonoBehaviour
         bool right = false;
         bool left = false;
 
-        GridSpace aboveSpace = currentGridSpace.GetAboveSpace();
-        GridSpace belowSpace = currentGridSpace.GetBelowSpace();
-        GridSpace leftSpace = currentGridSpace.GetLeftSpace();
-        GridSpace rightSpace = currentGridSpace.GetRightSpace();
+        
         
         if(distanceToPlayer.x > 0) below = true;
         if(distanceToPlayer.x < 0) above = true;
         if(distanceToPlayer.y > 0) right = true;
         if(distanceToPlayer.y < 0) left = true;
 
-        //Shark eats other fishes first -> should trigger fail condition
+        
 
-        Fish fishToEat = null;
-        Player player = null;
-
-        if(aboveSpace != null)
-        {
-            fishToEat = CheckSpaceForFish(aboveSpace);
-            player = CheckSpaceForPlayer(aboveSpace);
-        }
-        if(belowSpace != null)
-        {
-            fishToEat = CheckSpaceForFish(belowSpace);
-            player = CheckSpaceForPlayer(belowSpace);
-        }
-        if(leftSpace != null)
-        {
-            fishToEat = CheckSpaceForFish(leftSpace);
-            player = CheckSpaceForPlayer(leftSpace);
-        }
-        if(rightSpace != null)
-        {
-            fishToEat = CheckSpaceForFish(rightSpace);
-            player = CheckSpaceForPlayer(rightSpace);
-        }
-
-        Debug.Log("Player: " + player);
-
-        if(fishToEat != null) EatFish(fishToEat);
-        if(player != null) EatPlayer(player);
+        
 
         //Try to move towards the player - use the previous position of the player
 
+        if(below)
+        {
+            if(belowSpace != null)
+            {
+                if(belowSpace.GetOccupier() == null)
+                {
+                    return belowSpace;
+                }
+            }
 
+            if(leftSpace != null)
+            {
+                if(leftSpace.GetOccupier() == null)
+                {
+                    return leftSpace;
+                }
+            }
 
+            if(rightSpace != null)
+            {
+                if(rightSpace.GetOccupier() == null)
+                {
+                    return rightSpace;
+                }
+            }
+        }
+
+        if (above)
+        {
+            if(aboveSpace != null)
+            {
+                if(aboveSpace.GetOccupier() == null)
+                {
+                    return aboveSpace;
+                }
+            }
+
+            if(leftSpace != null)
+            {
+                if(leftSpace.GetOccupier() == null)
+                {
+                    return leftSpace;
+                }
+            }
+
+            if(rightSpace != null)
+            {
+                if(rightSpace.GetOccupier() == null)
+                {
+                    return rightSpace;
+                }
+            }
+        }
+
+        if (left)
+        {
+            if(leftSpace != null)
+            {
+                if(leftSpace.GetOccupier() == null)
+                {
+                    return leftSpace;
+                }
+            }
+
+            if(aboveSpace != null)
+            {
+                if(aboveSpace.GetOccupier() == null)
+                {
+                    return aboveSpace;
+                }
+            }
+
+            if(belowSpace != null)
+            {
+                if(belowSpace.GetOccupier() == null)
+                {
+                    return belowSpace;
+                }
+            }
+        }
+
+        if (right)
+        {
+            if(rightSpace != null)
+            {
+                if (rightSpace.GetOccupier() == null)
+                {
+                    return rightSpace;
+                }
+            }
+
+            if(aboveSpace != null)
+            {
+                if(aboveSpace.GetOccupier() == null)
+                {
+                    return aboveSpace;
+                }
+            }
+
+            if(belowSpace != null)
+            {
+                if(belowSpace.GetOccupier() == null)
+                {
+                    return belowSpace;
+                }
+            }
+        }
 
         return currentGridSpace;
     }
@@ -266,6 +443,10 @@ public class Fish : MonoBehaviour
             Fish fish = gridSpace.GetOccupier().GetComponent<Fish>();
             if(fish != null)
             {
+                if(fishType == FishType.LFish)
+                {
+                    if(fish.fishType != FishType.CFish) return null;
+                }
                 return fish;
             }
         }
@@ -276,17 +457,18 @@ public class Fish : MonoBehaviour
     {
         if (gridSpace.GetOccupier() != null)
         {
+            Debug.Log("Occupant found");
             Player player = gridSpace.GetOccupier().GetComponent<Player>();
-            if(player != null)
-            {
-                return player;
-            }
+            Debug.Log(player);
+            return player;
+
         }
         return null;
     }
 
     private void EatFish(Fish fish)
     {
+        Debug.Log("Eating fish");
         meshTransform.DOPunchScale(Vector3.one * 1.4f, 0.3f);
         audioSource.clip = chompSound;
         audioSource.Play();
@@ -296,7 +478,7 @@ public class Fish : MonoBehaviour
 
     private void EatPlayer(Player player)
     {
-        player.transform.DOPunchScale(Vector3.one * 0.7f, 0.3f);
+        player.transform.DOPunchScale(Vector3.one * 0.7f, 0.2f).OnComplete(()=>{Destroy(player.gameObject);});
 
         meshTransform.DOPunchScale(Vector3.one * 1.4f, 0.3f);
         audioSource.clip = chompSound;

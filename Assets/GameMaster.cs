@@ -4,8 +4,17 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+public enum GameState {
+        Free,
+        PlayerAnimations,
+        NPCAnimations,
+        Start,
+        Stop
+    }
+
 public class GameMaster : MonoBehaviour
 {
+    [SerializeField] private int sceneIndex;
     public static GameMaster instance;
     public GameObject timerVisual;
 
@@ -18,13 +27,7 @@ public class GameMaster : MonoBehaviour
     public int killCondition = 0;
 
     private Vector3 timerVisualStartSize;
-    public enum GameState {
-        Free,
-        PlayerAnimations,
-        NPCAnimations,
-        Start,
-        Stop
-    }
+    
     private GameState gameState;
     private GameState nextState;
 
@@ -47,7 +50,12 @@ public class GameMaster : MonoBehaviour
     void Start()
     {
         blackScreen.color = Color.black;
-        blackScreen.DOFade(0, 2);
+        blackScreen.DOFade(0, 2).OnComplete(() => {Init();});
+        
+    }
+
+    private void Init()
+    {
         timerVisualStartSize = timerVisual.transform.localScale;
         turnCounter = 0;
         activeFishes = Grid.instance.GetFishes();
@@ -78,9 +86,8 @@ public class GameMaster : MonoBehaviour
         {
             if(gameState == GameState.PlayerAnimations)
             {
-            } else if (gameState == GameState.NPCAnimations && nextState == GameState.NPCAnimations)
+            } else if (gameState == GameState.NPCAnimations && nextState == GameState.NPCAnimations && fishesMoved < activeFishes.Count)
             {
-
                 activeFishes[fishesMoved].GetComponent<Fish>().TryMove();
                 fishesMoved ++;
 
@@ -140,7 +147,7 @@ public class GameMaster : MonoBehaviour
 
             Destroy(fish.gameObject);
 
-            if(catchCondition == 0 && killCondition == 0)
+            if(catchCondition <= 0 && killCondition <= 0)
             {
                 Victory();
             }
@@ -175,7 +182,7 @@ public class GameMaster : MonoBehaviour
 
         blackScreen.DOFade(1, 2).OnComplete(() =>
         {
-            
+            SceneManager.LoadScene(sceneIndex + 1);
         }); 
     }
 
